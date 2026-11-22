@@ -323,7 +323,8 @@ body{
      · 세로 흐름: start + 수집 소스(2열) → 가로형 seed bus → Jev 판정(2열) → 결과(2×2)
      · 선택은 localStorage에 저장해 다음에 열어도 유지합니다(차단된 환경이면 무시).
      ============================================================ */
-  var MW = 460, MH = 960;
+  var MW = 460, MH = 960;          /* 기준 폭 — 폰 화면 비율에 맞춰 fit()이 다시 정합니다 */
+  var MW_MIN = 360, MW_MAX = 560;  /* 폰에서 좌우 여백이 남지 않는 폭 범위 */
   var MBUS = { x: 12, y: 0, w: MW - 24, h: 22 };
   var MODE = 'p', __savedMode = null;
   try { __savedMode = window.localStorage ? window.localStorage.getItem('jevSimMode') : null; } catch (e) {}
@@ -613,8 +614,11 @@ body{
     }
     return y + rowH;
   }
-  function layoutMobile() {
+  function layoutMobile(cw) {
+    /* cw: 이번 배치에 쓸 캔버스 폭(생략하면 기준 460). 폰에서는 fit()이 화면 비율로 정해 넘깁니다. */
+    if (cw) MW = cw;
     W = MW;
+    MBUS.w = MW - 24;
     BUS.x = MBUS.x; BUS.top = 0; BUS.w = MBUS.w; BUS.h = MBUS.h;
     var m = 12, gap = 13, colW = Math.floor((MW - m * 2 - gap) / 2);
     for (var i = 0; i < nodes.length; i++) {
@@ -623,7 +627,7 @@ body{
       nd.h = nodeH(rowsFor(nd).length, !!(nd.stack && nd.stack.length), !!(nd.pills && nd.pills.length));
     }
     var y = m + 4;
-    if (byId['start']) { byId['start'].x = m; byId['start'].y = Math.round(y); y += byId['start'].h + gap + 4; }
+    if (byId['start']) { byId['start'].x = m; byId['start'].w = MW - m * 2; byId['start'].y = Math.round(y); y += byId['start'].h + gap + 4; }
     if (srcNodes.length) y = gridPlace(srcNodes, m, gap, colW, y) + gap + 6;
     /* 가로형 seed bus */
     BUS.top = Math.round(y);
@@ -1455,8 +1459,20 @@ body{
       }
     }
   }
+  function pickMobileWidth() {
+    /* 폰 세로 화면(9:16)에 그래프가 좌우 여백 없이 한 화면에 들어오도록 캔버스 폭을 정합니다.
+       1) 기준 폭(460)으로 한 번 배치해 전체 높이를 재고
+       2) 화면 가로/세로 비율에 맞는 폭을 계산해 다시 배치합니다. */
+    var wrapEl = document.getElementById('stageWrap');
+    var avail = (wrapEl && wrapEl.clientWidth) || ((window.innerWidth || 400) - 24);
+    var availH = (window.innerHeight || 900) - 88;
+    layoutMobile(460);
+    if (!availH || availH < 120) return 460;
+    var need = Math.round(H * (avail / availH));
+    return Math.max(MW_MIN, Math.min(MW_MAX, need));
+  }
   function applyMode() {
-    if (MODE === 'm') layoutMobile(); else restorePC();
+    if (MODE === 'm') layoutMobile(pickMobileWidth()); else restorePC();
     renderNodes();
     buildEdges();
     buildPaths();
@@ -1493,9 +1509,11 @@ body{
     var s;
     if (MODE === 'm') {
       /* 폰에서 세로 스크롤 없이 한 화면에 들어오도록 높이까지 맞춥니다. */
+      /* 폭을 꽉 채워 좌우 여백을 없앱니다. 세로가 넘칠 때만 그만큼 줄입니다. */
       var availH = (window.innerHeight || 900) - 88;
-      s = Math.min(avail / W, availH / H);
-      if (s > 1.3) s = 1.3;
+      s = avail / W;
+      if (availH > 0 && H * s > availH) s = Math.min(s, availH / H);
+      if (s > 1.4) s = 1.4;
       if (s <= 0) s = 0.5;
     } else {
       s = avail / W;
@@ -1507,6 +1525,10 @@ body{
     world.style.transformOrigin = '0 0';
     out.style.width = Math.round(W * s) + 'px';
     out.style.height = Math.round(H * s) + 'px';
+    /* 스테이지를 부모 컨테이너 정중앙에 놓습니다(좌우 대칭) */
+    var sideGap = Math.max(0, Math.round((avail - W * s) / 2));
+    out.style.marginLeft = sideGap + 'px';
+    out.style.marginRight = sideGap + 'px';
     wrap.style.height = Math.round(H * s) + 'px';
     canvas.width = Math.round(W * s * dpr);
     canvas.height = Math.round(H * s * dpr);
@@ -1525,7 +1547,14 @@ body{
   buildPanels();
   buildAppendix();
   statHtml();
-  window.addEventListener('resize', function () { fit(); });
+  window.addEventListener('resize', function () {
+    /* 회전·창 크기 변경으로 화면 비율이 달라지면 모바일 캔버스 폭도 다시 정합니다 */
+    if (MODE === 'm') {
+      var wResize = pickMobileWidth();
+      if (Math.abs(wResize - MW) > 4) { applyMode(); return; }
+    }
+    fit();
+  });
 
   try { document.title = 'jev-topic-router · ' + (DATA.date || ''); } catch (e) {}
   var REDUCE = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
