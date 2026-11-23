@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#070A12">
+<title>n8n 파이프라인 · 0 → 134</title>
+<style>
+:root{
+  --bg:#070A12; --bg2:#0A101C; --card:#0D1524; --card2:#0A1220;
+  --ink:#E8F2FF; --ink2:#A9BAD2; --ink3:#6A7E99; --ink4:#4A5C74;
+  --line:rgba(122,170,255,.16); --line2:rgba(122,170,255,.09);
+  --cyan:#35E0D0; --amber:#FFB347; --orange:#FF8A3D; --blue:#4C8DFF;
+  --green:#46E39B; --pink:#FF5C8A; --violet:#A78BFA; --slate:#8FA6C4;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Apple SD Gothic Neo",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:
+    radial-gradient(90% 60% at 12% -8%, rgba(53,224,208,.10) 0%, rgba(7,10,18,0) 55%),
+    radial-gradient(70% 50% at 88% 0%, rgba(76,141,255,.11) 0%, rgba(7,10,18,0) 60%),
+    linear-gradient(180deg,#070A12 0%,#080C16 55%,#060910 100%);
+  color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased;
+  min-height:100vh; padding:10px 12px 16px;
+}
+.app{max-width:1720px;margin:0 auto;background:linear-gradient(180deg,#0A101C,#080D17);
+  border:1px solid var(--line); border-radius:12px; overflow:hidden;
+  box-shadow:0 0 0 1px rgba(255,255,255,.02) inset, 0 30px 70px -40px #000, 0 0 90px -40px rgba(76,141,255,.35)}
+
+/* ---------- topbar ---------- */
+.topbar{display:flex;align-items:center;gap:12px;height:44px;padding:0 10px 0 12px;
+  border-bottom:1px solid var(--line2);background:linear-gradient(180deg,rgba(20,32,52,.85),rgba(10,16,28,.6));flex-wrap:nowrap;overflow:hidden}
+.brand{display:flex;align-items:center;gap:7px;flex:0 0 auto;min-width:0}
+.bdot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px rgba(53,224,208,.9),0 0 0 3px rgba(53,224,208,.12);flex:0 0 auto}
+.bname{font:600 10.5px/1 var(--mono);letter-spacing:.06em;color:#B9CBDF;white-space:nowrap}
+.bname b{color:#E8F2FF}
+.stats{display:flex;align-items:center;gap:11px;flex:1 1 auto;min-width:0;overflow:hidden}
+.st{display:flex;align-items:center;gap:4px;white-space:nowrap;font:500 9px/1 var(--mono);letter-spacing:.08em;color:var(--ink4)}
+.st b{font:700 10px/1 var(--mono);color:#CBDAEC;letter-spacing:.02em}
+.st b.hi{color:var(--cyan)}
+.ctl{display:flex;gap:5px;flex:0 0 auto}
+.btn{font:600 10px/1 var(--mono);letter-spacing:.04em;color:#B9CBDF;background:rgba(20,32,52,.9);
+  border:1px solid var(--line);border-radius:6px;padding:6px 8px;cursor:pointer;min-width:30px;height:28px;
+  transition:border-color .18s,color .18s,background .18s}
+.btn:hover{border-color:rgba(53,224,208,.55);color:var(--cyan);background:rgba(26,44,66,.9)}
+.btn:active{transform:translateY(1px)}
+.btn.on{border-color:rgba(53,224,208,.6);color:var(--cyan)}
+
+/* ---------- stage ---------- */
+.stage-wrap{position:relative;overflow:hidden;
+  background:
+    linear-gradient(rgba(122,170,255,.045) 1px,transparent 1px) 0 0/44px 44px,
+    linear-gradient(90deg,rgba(122,170,255,.045) 1px,transparent 1px) 0 0/44px 44px,
+    radial-gradient(70% 60% at 26% 0%, rgba(30,54,90,.55) 0%, rgba(8,13,23,0) 62%),
+    linear-gradient(180deg,#080D18 0%,#070B14 100%);
+  border-bottom:1px solid var(--line2)}
+.stage-out{position:relative;overflow:hidden;transform-origin:0 0}
+.world{position:relative;transform-origin:0 0}
+#svg{position:absolute;left:0;top:0;display:block;overflow:visible}
+
+/* ---------- node ---------- */
+#nodes{position:absolute;left:0;top:0;width:100%;height:100%}
+.node{position:absolute;background:linear-gradient(180deg,#101A2B,#0A1120);
+  border:1px solid rgba(122,170,255,.14);border-radius:9px;overflow:hidden;cursor:pointer;
+  opacity:0;transform:translateY(5px) scale(.995);
+  transition:opacity .45s ease,transform .45s ease,border-color .25s,box-shadow .25s;
+  box-shadow:0 8px 22px -16px #000}
+.node.in{opacity:1;transform:none}
+.node:hover{border-color:rgba(122,170,255,.4);z-index:8;box-shadow:0 16px 34px -18px #000}
+.node.on{border-color:rgba(var(--cr),.34)}
+.node.on .nh{background:linear-gradient(90deg,rgba(var(--cr),.22),rgba(var(--cr),.03))}
+.node.hit{border-color:rgba(var(--cr),.85);
+  box-shadow:0 0 0 1px rgba(var(--cr),.5),0 0 30px rgba(var(--cr),.28),0 18px 34px -20px #000}
+.node.hit::after{content:'';position:absolute;inset:-3px;border-radius:11px;border:1px solid rgba(var(--cr),.9);
+  opacity:0;animation:ring .7s ease-out;pointer-events:none}
+@keyframes ring{0%{opacity:.85;transform:scale(1)}100%{opacity:0;transform:scale(1.055)}}
+.nh{display:flex;align-items:center;gap:6px;padding:5px 8px 5px 7px;
+  background:linear-gradient(90deg,rgba(122,170,255,.07),rgba(122,170,255,.01));
+  border-bottom:1px solid rgba(122,170,255,.1);transition:background .3s}
+.nidx{font:700 8.5px/1 var(--mono);color:#08101C;background:var(--c);border-radius:3px;padding:2px 4px;flex:0 0 auto;letter-spacing:.02em}
+.nt{font:700 11px/1.2 var(--sans);color:#E8F2FF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em}
+.np{margin-left:auto;font:600 8.5px/1 var(--mono);color:var(--c);white-space:nowrap;flex:0 0 auto;opacity:.9}
+.nb{padding:5px 8px 7px}
+.nsub{font:500 8px/1.2 var(--mono);color:#546B8B;letter-spacing:.01em;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.r{display:flex;align-items:center;gap:5px;height:15px;font:400 10px/15px var(--sans);color:#95A9C3;white-space:nowrap;overflow:hidden}
+.r .rl{overflow:hidden;text-overflow:ellipsis}
+.r .rv{margin-left:auto;font:600 9.5px/1 var(--mono);color:#DCE9FA;flex:0 0 auto;letter-spacing:-.01em}
+.r.dim .rl,.r.dim .rv{color:#7C8FA8}
+.lbar{height:3px;border-radius:2px;background:rgba(122,170,255,.12);margin-top:5px;overflow:hidden}.lbar i{display:block;height:100%;width:0;border-radius:2px;background:var(--c);box-shadow:0 0 8px rgba(var(--cr),.7);transition:width .25s linear}
+.lrow{display:flex;align-items:baseline;gap:4px;margin-top:4px;font:500 8.5px/1 var(--mono);color:#6A7E99;letter-spacing:.02em}
+.lrow b{font:700 11px/1 var(--mono);color:var(--c);letter-spacing:-.02em}
+.lrow .lt{color:#546B8B}
+.nfoot{display:flex;align-items:center;gap:5px;padding:4px 8px 5px;border-top:1px solid rgba(122,170,255,.08);
+  font:500 8px/1.25 var(--mono);color:#6A7E99;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nfoot .tag{color:var(--c);opacity:.95}
+.node.mini .nt{font-size:10.5px}
+.node.mini .nb{padding:4px 8px 6px}
+
+/* mobile cards */
+.node.mob{border-radius:8px}
+.node.mob .nh{padding:4px 7px}
+.node.mob .nt{font-size:11px}
+.node.mob .nb{padding:3px 7px 5px}
+.node.mob .mline{font:500 9px/13px var(--mono);color:#93A8C2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---------- edges ---------- */
+.edge{fill:none;stroke-linecap:round;transition:stroke-opacity .35s,stroke-width .35s}
+.edge.hot{stroke-opacity:.82;stroke-width:1.9;stroke-dasharray:3 8;animation:dash .7s linear infinite}
+.edge.done{stroke-opacity:.42}
+@keyframes dash{to{stroke-dashoffset:-11}}
+
+/* ---------- badge ---------- */
+.badge{position:absolute;left:50%;bottom:14px;transform:translateX(-50%) translateY(6px);display:flex;align-items:center;gap:9px;
+  background:rgba(10,18,30,.94);border:1px solid rgba(122,170,255,.22);border-radius:999px;padding:6px 14px 6px 11px;
+  box-shadow:0 10px 30px -14px #000,0 0 40px -20px rgba(53,224,208,.5);opacity:0;transition:opacity .4s,transform .4s;z-index:9}
+.badge.in{opacity:1;transform:translateX(-50%)}
+.badge .bd{width:7px;height:7px;border-radius:50%;background:var(--cyan);animation:pulse 1.6s infinite}
+.badge.done .bd{animation:none;background:var(--green)}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(53,224,208,.5)}50%{box-shadow:0 0 0 6px rgba(53,224,208,0)}}
+.btxt b{display:block;font:700 10px/1.25 var(--mono);letter-spacing:.12em;color:#E8F2FF}
+.btxt span{display:block;font:400 8.5px/1.35 var(--mono);color:#7C8FA8;margin-top:1px}
+.bl{font:700 8px/1 var(--mono);letter-spacing:.1em;color:var(--cyan);border:1px solid rgba(53,224,208,.4);
+  border-radius:3px;padding:3px 5px;background:rgba(53,224,208,.08)}
+.badge.done .bl{color:var(--green);border-color:rgba(70,227,155,.4);background:rgba(70,227,155,.08)}
+
+/* ---------- ribbon ---------- */
+.ribbon{display:flex;align-items:center;gap:6px;padding:9px 10px;overflow-x:auto;background:rgba(9,14,24,.85);
+  border-bottom:1px solid var(--line2);scrollbar-width:none}
+.ribbon::-webkit-scrollbar{display:none}
+.rb{flex:0 0 auto;font:600 9.5px/1 var(--mono);letter-spacing:.03em;color:#8CA0BA;background:rgba(20,32,52,.8);
+  border:1px solid var(--line2);border-radius:999px;padding:6px 10px;cursor:pointer;white-space:nowrap;transition:all .18s}
+.rb:hover{color:#DCE9FA;border-color:rgba(122,170,255,.35)}
+.rb.on{color:#061019;background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 18px -6px rgba(53,224,208,.8)}
+.rb.past{color:#B9CBDF;border-color:rgba(53,224,208,.28)}
+
+/* ---------- footer ---------- */
+.foot{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;padding:9px 12px 11px;font:400 9.5px/1.6 var(--mono);color:#6A7E99}
+.foot .lg{display:flex;align-items:center;gap:5px}
+.foot .sw{width:7px;height:7px;border-radius:2px;display:block}
+.foot .hint{margin-left:auto;color:#546B8B}
+.foot .hint b{color:#8CA0BA;font-weight:600}
+
+/* ---------- drawer ---------- */
+.veil{position:fixed;inset:0;background:rgba(3,6,12,.52);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .25s;z-index:40}
+.veil.in{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:420px;max-width:94vw;z-index:41;
+  background:linear-gradient(180deg,#0C1424,#080D18);border-left:1px solid var(--line);
+  transform:translateX(102%);transition:transform .3s cubic-bezier(.2,.7,.3,1);display:flex;flex-direction:column;
+  box-shadow:-24px 0 60px -30px #000}
+.drawer.in{transform:none}
+.dh{padding:14px 16px 12px;border-bottom:1px solid var(--line2);position:relative;
+  background:linear-gradient(90deg,rgba(var(--cr,122,170,255),.16),rgba(10,16,28,0))}
+.dh .k{font:700 9px/1 var(--mono);letter-spacing:.14em;color:var(--c,#8CA0BA)}
+.dh b{display:block;font:700 15px/1.35 var(--sans);color:#F0F6FF;margin-top:6px;letter-spacing:-.01em}
+.dh span.s{display:block;font:500 10px/1.5 var(--mono);color:#7C8FA8;margin-top:5px}
+.dh .x{position:absolute;right:12px;top:12px;cursor:pointer;color:#7C8FA8;font:700 14px/1 var(--mono);padding:5px 7px;border-radius:6px}
+.dh .x:hover{color:#fff;background:rgba(122,170,255,.12)}
+.dlist{overflow:auto;flex:1 1 auto;padding:14px 16px 28px}
+.dsec{font:700 9px/1 var(--mono);letter-spacing:.13em;color:var(--ink4);margin:16px 0 7px}
+.dsec:first-child{margin-top:0}
+.dl{display:flex;gap:9px;font:400 12px/1.65 var(--sans);color:#B9CBDF;padding:5px 0;border-bottom:1px dashed rgba(122,170,255,.08)}
+.dl .lk{flex:0 0 62px;font:600 10px/1.65 var(--mono);color:#7C8FA8;letter-spacing:.02em}
+.dl .lv{flex:1 1 auto;color:#D6E4F5}
+.dp{font:400 12px/1.7 var(--sans);color:#A9BAD2;background:rgba(122,170,255,.05);border:1px solid rgba(122,170,255,.1);
+  border-radius:8px;padding:10px 11px;margin-top:6px}
+.dp b{color:#E8F2FF;font-weight:600}
+.dchip{display:inline-block;font:600 9.5px/1 var(--mono);color:#0A1220;background:var(--c,#8CA0BA);border-radius:4px;padding:4px 6px;margin:0 4px 4px 0}
+
+/* ---------- mobile ---------- */
+@media(max-width:760px){
+  body{padding:6px 6px 12px}
+  .app{border-radius:10px}
+  .topbar{height:46px;padding:0 8px;gap:8px}
+  .bname{font-size:8.5px}
+  .brand .bp{display:none}
+  .stats{gap:8px}
+  .st{font-size:8px}
+  .st.opt{display:none}
+  .btn{height:32px;min-width:34px;padding:7px 8px;border-radius:7px;font-size:11px}
+  .ribbon{padding:7px 8px;gap:5px}
+  .rb{font-size:9px;padding:6px 9px}
+  .foot{padding:7px 9px 10px;font-size:8.5px;gap:4px 10px}
+  .foot .hint{display:none}
+  .drawer{width:100%;max-width:100%}
+}
+@media(prefers-reduced-motion:reduce){
+  .edge.hot{animation:none}
+  .node{transition:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand"><span class="bdot"></span><span class="bname"><span class="bp">nomadearth · </span><b>n8n pipeline</b> 0→134</span></div>
+    <div class="stats" id="stats"></div>
+    <div class="ctl">
+      <button class="btn" id="modeBtn" title="PC / 모바일 9:16 보기 전환">🖥</button>
+      <button class="btn" id="playBtn" title="재생 / 일시정지">❚❚</button>
+      <button class="btn" id="spdBtn" title="배속 1x / 2x">1x</button>
+      <button class="btn" id="rstBtn" title="처음부터">↺</button>
+    </div>
+  </div>
+
+  <div class="stage-wrap" id="stageWrap">
+    <div class="stage-out" id="stageOut">
+      <div class="world" id="world">
+        <svg id="svg" xmlns="http://www.w3.org/2000/svg"><defs id="defs"></defs><g id="gEdges"></g><g id="gPackets"></g></svg>
+        <div id="nodes"></div>
+        <div class="badge" id="badge">
+          <i class="bd"></i>
+          <div class="btxt"><b id="badgeT">00 · 수집</b><span id="badgeS">15채널 · 90피드</span></div>
+          <span class="bl" id="badgeL">LIVE</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ribbon" id="ribbon"></div>
+
+  <div class="foot">
+    <span class="lg"><i class="sw" style="background:#FFB347"></i>수집</span>
+    <span class="lg"><i class="sw" style="background:#35E0D0"></i>생성</span>
+    <span class="lg"><i class="sw" style="background:#4C8DFF"></i>분류</span>
+    <span class="lg"><i class="sw" style="background:#FF5C8A"></i>WP</span>
+    <span class="lg"><i class="sw" style="background:#A78BFA"></i>네이버·티스토리</span>
+    <span class="lg"><i class="sw" style="background:#46E39B"></i>노션</span>
+    <span class="lg"><i class="sw" style="background:#8FA6C4"></i>백업</span>
+    <span class="hint">노드를 <b>누르면</b> 그 단계의 입출력·주기·실제 값이 열립니다</span>
+  </div>
+</div>
+
+<div class="veil" id="veil"></div>
+<aside class="drawer" id="drawer">
+  <div class="dh" id="dh">
+    <span class="k" id="dK">-</span>
+    <b id="dTitle">-</b>
+    <span class="s" id="dSub">-</span>
+    <span class="x" id="dX">✕</span>
+  </div>
+  <div class="dlist" id="dList"></div>
+</aside>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ============================================================
+     0. 파이프라인 데이터 (2026-11-23 기준)
+     ============================================================ */
+  var G = {
+    collect:'#FFB347', filter:'#FF8A3D', sheet:'#46E39B', sim:'#8FA6C4',
+    gen:'#35E0D0', sort:'#4C8DFF', folder:'#6FA8FF',
+    notion:'#46E39B', wp:'#FF5C8A', nv:'#A78BFA', archive:'#8FA6C4'
+  };
+  function rb(hex) {
+    var h = hex.replace('#', '');
+    return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)].join(',');
+  }
+
+  var NODES = [
+    { id:'cron', idx:'0', col:1, c:G.collect, name:'07:00 트리거', sub:'매일 07:00 KST', per:'07:00',
+      rows:[['다음 실행','07:00 KST'],['이후','1-1 · 07:20']],
+      foot:'<span class="tag">schedule</span> · 하루의 시작',
+      mline:'매일 07:00 KST · 첫 실행',
+      d:{
+        role:'n8n Schedule Trigger가 매일 아침 7시(KST)에 0단계 워크플로를 깨웁니다.',
+        io:[['실행','0_글감생성기_Jev필터_고정형'],['다음','1-1 · 07:20 (자료수집)'],['타임존','Asia/Seoul']],
+        note:'규칙·템플릿은 드라이브 문서에 있고 n8n은 그것을 읽기만 하는 <b>고정형</b>이라, 글감 방향이 바뀌어도 노드를 다시 Import하지 않습니다.'
+      } },
+
+    { id:'s0', idx:'1', col:1, c:G.collect, name:'글감생성기', sub:'0_글감생성기_Jev필터_고정형', per:'07:00',
+      rows:[['채널','15개'],['계획','62건/일'],['피드','90개'],['시트','오늘 글감']],
+      live:{ total:15 }, foot:'장식 9채널 50 · 나리 6채널 12',
+      mline:'15채널 · 62건/일 · 90피드',
+      d:{
+        role:'장식 9채널 + 나리 6채널, 하루 62건의 글감 후보를 만듭니다.',
+        io:[['입력','RSS·SNS·유튜브 90개 피드, 1311 규칙 문서'],['출력','후보 시드 → Jev 필터'],['시트','전체 글 · 오늘 글감']],
+        fact:[['채널','15개 (장식 9 · 나리 6)'],['하루 계획','62건 (50 + 12)'],['피드','90개'],['중복 검사','전체 글 · 오늘 글감']],
+        note:'같은 날 두 번 돌아도 이미 있는 제목·키워드는 다시 넣지 않습니다. 채널별 계획보다 3건 더 요청해 중복 탈락 여유를 둡니다.'
+      } },
+
+    { id:'jev', idx:'2', col:1, c:G.filter, name:'Jev 필터', sub:'TypeSafe Jev · system_one', per:'07:00',
+      rows:[['판정 시드','96개'],['통과','65건'],['분기','ko16·en15'],['엔진','Jev system_one']],
+      live:{ total:96 }, foot:'noul ≥ 0.45 · 노이즈·중복 차단',
+      mline:'96 판정 → 65 통과',
+      d:{
+        role:'노이즈·중복을 글감이 되기 전에 걸러 냅니다. 시드마다 3개 질문(가치·검색성·클릭 이유)을 던져 noul과 score를 만듭니다.',
+        io:[['입력','실시간 시드 최대 96개'],['출력','통과 65 → 포맷 분기'],['분기','blog_ko 16 · blog_en 15 · 숏폼 16 · 카드뉴스 18']],
+        fact:[['기준','noul ≥ 0.45'],['실측','2026-11-22 실행'],['비용','1회 수 센트 (입력 토큰 기준)']],
+        note:'Jev가 응답하지 않아도 파이프라인은 멈추지 않습니다. 필터는 관문이고, 글은 Azure가 씁니다. 판정 결과는 매일 jev-sim 리포트로도 남습니다.'
+      } },
+
+    { id:'sheet', idx:'3', col:1, c:G.sheet, name:'오늘 글감', sub:'구글 시트 적재', per:'07:00',
+      rows:[['탭','오늘 글감'],['글감','62건']], live:{ total:62 }, foot:'전체 글 932편과 중복 검사',
+      mline:'시트 · 오늘 글감 62건',
+      d:{
+        role:'오늘 쓸 글감을 통합 대시보드 시트의 `오늘 글감` 탭에 적재합니다. 이후 1-1~1-4가 모두 이 시트의 진행상태를 보고 움직입니다.',
+        io:[['시트','[대시보드] 노마드어스·블로그 통합 현황'],['탭','전체 글(932편) · 오늘 글감'],['상태','자료수집→초안→완성본→등록대기→예약→공개']],
+        note:'시트가 곧 작업 대기열입니다. 각 단계는 "다음 상태"의 행만 집어 갑니다.'
+      } },
+
+    { id:'sim', idx:'4', col:1, c:G.sim, name:'jev-sim 배포', sub:'GitHub Pages 자동 업로드', per:'07:00',
+      rows:[['대상','index.html'],['갱신','매일 07:00']], foot:'github.io/jev-sim',
+      mline:'jev-sim 리포트 자동 갱신',
+      d:{
+        role:'오늘의 판정 결과를 모바일 9:16 리포트 페이지로 만들어 GitHub Pages(jev-sim)에 커밋합니다.',
+        io:[['저장소','jangsik1986-bot/jev-sim'],['파일','index.html (sha 조회 → PUT)'],['링크','https://jangsik1986-bot.github.io/jev-sim/']],
+        note:'업로드가 실패해도 글감 생성은 계속되고, 텔레그램에 실패 사유가 적혀 옵니다. 링크는 어제 화면 그대로 남습니다.'
+      } },
+
+    { id:'s1', idx:'5', col:2, c:G.gen, name:'1-1 시드선별', sub:'1-1_시드선별_고정형', per:'07:20',
+      rows:[['입력','오늘 글감'],['출력','131 기획'],['모델','Azure 글쓰기'],['알림','텔레그램']],
+      foot:'매일 07:20 · 채널별 대상 선별',
+      mline:'131 기획 · 매일 07:20',
+      d:{
+        role:'시트의 오늘 글감에서 채널별 대상을 골라, 131 폴더에 기획·자료 파일을 만듭니다.',
+        io:[['입력','오늘 글감 · 131 규칙 문서'],['출력','131. [자료] 수집 폴더 + 시트 상태 갱신'],['알림','텔레그램 요약']],
+        note:'대상이 없으면 아무것도 만들지 않고 "대상 없음"만 알립니다. 빈 실행이 쌓이지 않게 한 겁니다.'
+      } },
+
+    { id:'s2', idx:'6', col:2, c:G.gen, name:'1-2 초안생성', sub:'1-2_초안생성_고정형', per:'15분',
+      rows:[['참조','12 템플릿'],['카테고리','5종'],['출력','132 초안'],['주기','15분마다']],
+      foot:'3플랫폼 × 5카테고리 = 템플릿 15종',
+      mline:'132 초안 · 15분마다',
+      d:{
+        role:'131 기획을 플랫폼·카테고리 템플릿에 맞춰 초안으로 만듭니다.',
+        io:[['입력','131 자료 · 12. 각종 템플릿(15종)'],['출력','132. [초안] 생성 폴더'],['주기','15분마다 빈 슬롯 확인']],
+        note:'템플릿은 워드프레스=순수 HTML, 티스토리=표 1개, 네이버=마크다운처럼 플랫폼별로 다릅니다. 이 차이가 뒤에서 그대로 발행 방식이 됩니다.'
+      } },
+
+    { id:'s3', idx:'7', col:2, c:G.gen, name:'1-3 완성본', sub:'1-3_완성본생성기_고정형', per:'15분',
+      rows:[['규칙','1331'],['템플릿','12 · 15종'],['출력','133 완성본'],['티스토리','복사용 HTML']],
+      foot:'2026-11-23 · 코드펜스 없는 HTML',
+      mline:'133 완성본 · 티스토리 복사용 HTML',
+      d:{
+        role:'1331 규칙(v1.2)과 플랫폼별 템플릿으로 발행 가능한 완성본을 만듭니다.',
+        io:[['입력','132 초안 · 1331 규칙 v1.2 · 12 템플릿'],['출력','133. [완성본] 생성 루트'],['티스토리','코드펜스 없는 복사용 HTML · h2/h3 · 표 2~3개 · 2,000~3,000자']],
+        note:'1-3-2 티스토리 형식을 11-23에 바꿨습니다. style·class 속성을 지우고 화이트리스트 태그만 남겨, 복사해 붙이면 그대로 발행됩니다. 워드프레스·네이버 출력은 이전과 같습니다.'
+      } },
+
+    { id:'s3b', idx:'8', col:3, c:G.sort, name:'1-3b 분류기', sub:'1-3b_완성본_블로그분류기', per:'15분',
+      rows:[['스캔','133 루트'],['판별','본문 기준'],['이동','15개 폴더'],['회당','최대 12건']],
+      foot:'본문 4만자까지 읽고 블로그 판별',
+      mline:'133 루트 → 15개 폴더',
+      d:{
+        role:'133 루트에 쌓인 완성본을 읽고, 본문 내용으로 어느 블로그 글인지 판별해 해당 폴더로 옮깁니다.',
+        io:[['입력','133 루트 파일 (회당 최대 12건)'],['출력','1332~13316 블로그별 폴더'],['알림','텔레그램 이동 결과']],
+        note:'파일 머리말의 블로그명이 비어 있어도 본문·별칭으로 판별합니다. 새 블로그를 만들면 분류기 설정에 한 줄만 추가하면 됩니다.'
+      } },
+
+    { id:'folders', idx:'9', col:3, c:G.folder, name:'블로그별 15폴더', sub:'1332 ~ 13316', per:'15개',
+      rows:[['워드프레스','1332 · 1333'],['네이버','1334·1335·13316'],['티스토리','1336~13315']],
+      live:{ total:15 }, foot:'파일이 놓인 폴더 = 발행될 블로그',
+      mline:'1332~13316 · 15개 폴더',
+      d:{
+        role:'폴더가 곧 채널입니다. 어느 폴더에 들어갔느냐가 어느 블로그로 나갈지를 정합니다.',
+        io:[['WP','1332 노마드어스 KO · 1333 EN'],['네이버','1334 이웃집김과장 · 1335 엔알시스템 · 13316 skfldy1021'],['티스토리','1336~13310 (장식 5) · 13311~13315 (나리 5)']],
+        note:'장식 9채널은 1332~13310, 나리 6채널은 13311~13316입니다. 발행이 끝나면 파일명에 `(업로드됨)`이 붙고 1-3c가 백업으로 치웁니다.'
+      } },
+
+    { id:'t4', idx:'10', col:4, c:G.notion, name:'1-4 노션·WP', sub:'1-4_노션_WP_업로더', per:'15분',
+      rows:[['노션','포스팅 계획표'],['중복','검사 후 변환'],['서식','플랫폼별'],['기준','확인필요 0']],
+      foot:'노션 블록 변환 · WP 예약 등록',
+      mline:'노션 포스팅 계획표 적재',
+      d:{
+        role:'완성본을 노션 `포스팅 계획표`에 적재합니다. 중복을 검사하고 플랫폼 서식으로 블록을 바꿔 올립니다.',
+        io:[['입력','133 · 134 목록'],['출력','노션 DB 항목'],['조건','확인필요 0 통과 건만']],
+        note:'노션은 "복붙 창고"입니다. 장식 님이 화면에서 복사해 각 플랫폼에 붙이는 마지막 손길을 남겨 두는 자리입니다.'
+      } },
+
+    { id:'notion', idx:'11', col:5, c:G.notion, name:'노션 포스팅 계획표', sub:'복붙 창고 DB', per:'DB',
+      rows:[['티스토리','html 코드블록'],['WP·네이버','노션 서식'],['용도','사람 복붙']],
+      foot:'24581c2a-02c4-4e71-a641-7789aa5dbedd',
+      mline:'노션 복붙 창고',
+      d:{
+        role:'플랫폼별로 붙이기 좋은 형태로 정리된 원고 창고입니다.',
+        io:[['워크스페이스','jangsik kim의 Notion'],['티스토리','복사용 html 코드블록'],['WP·네이버','노션 서식 그대로']],
+        note:'자동 발행이 어려운 플랫폼은 여기서 사람이 복사해 붙입니다. 11-20에 옛 완성본 16편을 한 번에 올려 두었습니다.'
+      } },
+
+    { id:'wp', idx:'12', col:4, c:G.wp, name:'WP 협업 발행', sub:'몽순이 & 드리미', per:'1시간',
+      rows:[['감시','1332 · 1333'],['발행','nomadearth'],['SEO','Rank Math 80+'],['표시','(업로드됨)']],
+      foot:'겹침 없이 예약 · 쿠팡 링크 분리',
+      mline:'WP 예약 발행 · 1시간마다',
+      d:{
+        role:'1332·1333 폴더를 1시간마다 확인해, 서로 겹치지 않게 노마드어스에 예약 발행합니다.',
+        io:[['감시','1332 노마드어스 KO · 1333 EN'],['결과','예약 글 + 파일명 `(업로드됨)`'],['원칙','Rank Math 80+ · 쿠팡 파트너스 링크 분리 · 대표이미지 1200×675']],
+        note:'두 AI가 같은 글을 집지 않도록 폴더 확인 순서를 나눠 잡습니다. SEO 점수가 기준에 못 미치면 발행하지 않고 되돌립니다.'
+      } },
+
+    { id:'nv', idx:'13', col:4, c:G.nv, name:'네이버·티스토리 발행', sub:'1334~13310 원고', per:'수시',
+      rows:[['네이버','스마트에디터 ONE'],['티스토리','HTML 모드'],['방식','예약 발행']],
+      foot:'로그인·에디터가 필요해 사람 손 협업',
+      mline:'네이버·티스토리 예약 발행',
+      d:{
+        role:'1334~13310 폴더의 원고를 네이버 스마트에디터 ONE과 티스토리 HTML 모드로 예약 발행합니다.',
+        io:[['네이버','이웃집김과장 · 엔알시스템 (애드포스트)'],['티스토리','이웃집김과장 · 60초쉬운설치 · 렛츠팁스 · ecotube · tubereview'],['형식','티스토리는 복사용 HTML 그대로']],
+        note:'에디터 로그인이 필요한 구간이라 완전 자동이 아닙니다. 그래서 티스토리 산출물을 "복사만 하면 되는 HTML"로 맞춰 두었습니다.'
+      } },
+
+    { id:'wpsite', idx:'14', col:5, c:G.wp, name:'nomadearth.co.kr', sub:'예약 발행지', per:'예약',
+      rows:[['슬롯','08:30 · 18:30'],['이미지','1200×675'],['목표','Rank Math 85+']],
+      foot:'한국어 + 영문 /en/ 2트랙',
+      mline:'nomadearth 예약 발행',
+      d:{
+        role:'실제 발행지입니다. 한국어 트랙과 /en/ 영문 트랙이 같은 사이트에서 돕니다.',
+        io:[['예약 슬롯','08:30 · 18:30 (빈 슬롯 11:30)'],['대표이미지','1200×675 JPEG 1MB 이하'],['SEO','Rank Math 85+ 목표']],
+        note:'발행 후 파일명에 `(업로드됨)`이 붙으면 1-3c가 백업 폴더로 옮겨 자리를 비웁니다.'
+      } },
+
+    { id:'nvsite', idx:'15', col:5, c:G.nv, name:'네이버 3 · 티스토리 10', sub:'발행지', per:'예약',
+      rows:[['네이버','3채널'],['티스토리','10채널'],['수익','애드포스트·애드센스']],
+      foot:'예약 발행 · 애드센스 심사 중 5곳',
+      mline:'네이버·티스토리 발행지',
+      d:{
+        role:'장식 님 13채널 + 나리 님 채널이 실제로 나가는 곳입니다.',
+        io:[['네이버','이웃집김과장 · 엔알시스템 · skfldy1021'],['티스토리','장식 5 · 나리 5'],['수익','애드포스트 · 애드센스(일부 심사 중)']],
+        note:'네이버는 제휴 링크를 넣지 않고, 티스토리·WP는 쿠팡 링크 위치를 템플릿이 정해 줍니다.'
+      } },
+
+    { id:'archive', idx:'16', col:4, c:G.archive, name:'1-3c 백업이동기', sub:'1-3c_완성본_백업이동기 · 15분마다', per:'15분',
+      rows:[['감지 → 이동','(업로드됨) → 날짜 붙여 /백업'],['다음','134 완료 데이터로 역방향 개선']],
+      foot:'폴더를 비워 다음 원고 자리를 만든다',
+      mline:'(업로드됨) → 각 폴더 /백업',
+      d:{
+        role:'발행이 끝나 `(업로드됨)`이 붙은 파일을 찾아, 날짜를 붙여 각 폴더 안 `백업`으로 옮깁니다.',
+        io:[['감지','파일명 `(업로드됨)`'],['이동','같은 폴더의 백업 폴더 + 날짜'],['주기','15분마다']],
+        note:'폴더가 비면 다음 원고가 들어올 자리가 생깁니다. 쌓인 완료 데이터는 나중에 템플릿·규칙을 역방향으로 고치는 재료가 됩니다.'
+      } }
+  ];
+  var byId = {};
+  for (var ni = 0; ni < NODES.length; ni++) byId[NODES[ni].id] = NODES[ni];
+
+  /* ---------- 엣지 ---------- */
+  var EDGES = [
+    { id:'cron_s0',   a:'cron',   b:'s0',    c:G.collect, sa:'b', sb:'t' },
+    { id:'s0_jev',    a:'s0',     b:'jev',   c:G.filter,  sa:'b', sb:'t' },
+    { id:'jev_sheet', a:'jev',    b:'sheet', c:G.sheet,   sa:'b', sb:'t' },
+    { id:'jev_sim',   a:'jev',    b:'sim',   c:G.sim,     sa:'b', sb:'t' },
+    { id:'sheet_s1',  a:'sheet',  b:'s1',    c:G.gen,     sa:'r', sb:'l' },
+    { id:'s1_s2',     a:'s1',     b:'s2',    c:G.gen,     sa:'b', sb:'t' },
+    { id:'s2_s3',     a:'s2',     b:'s3',    c:G.gen,     sa:'b', sb:'t' },
+    { id:'s3_s3b',    a:'s3',     b:'s3b',   c:G.sort,    sa:'r', sb:'l' },
+    { id:'s3b_folders', a:'s3b',  b:'folders', c:G.folder, sa:'b', sb:'t' },
+    { id:'folders_t4', a:'folders', b:'t4',  c:G.notion,  sa:'r', sb:'l' },
+    { id:'folders_wp', a:'folders', b:'wp',  c:G.wp,      sa:'r', sb:'l' },
+    { id:'folders_nv', a:'folders', b:'nv',  c:G.nv,      sa:'r', sb:'l' },
+    { id:'t4_notion',  a:'t4',    b:'notion', c:G.notion, sa:'r', sb:'l' },
+    { id:'wp_wpsite',  a:'wp',    b:'wpsite', c:G.wp,     sa:'r', sb:'l' },
+    { id:'nv_nvsite',  a:'nv',    b:'nvsite', c:G.nv,     sa:'r', sb:'l' },
+    { id:'wp_archive', a:'wpsite', b:'archive', c:G.archive, sa:'r', sb:'r' },
+    { id:'nv_archive', a:'nvsite', b:'archive', c:G.archive, sa:'b', sb:'t' },
+    { id:'folders_archive', a:'folders', b:'archive', c:G.archive, sa:'b', sb:'t', dash:true }
+  ];
+  /* PC에서만 쓰는 우회 경로 (굵은 곡선이 카드 뒤로 숨지 않게) */
+  function pcVia(id, p1, p2) {
+    if (MODE !== 'p') return null;
+    if (id === 'sheet_s1') return [[296, p1[1]], [296, p2[1]]];
+    return null;
+  }
+  var edgeById = {};
+  for (var ei = 0; ei < EDGES.length; ei++) edgeById[EDGES[ei].id] = EDGES[ei];
+
+  /* ---------- 타임라인 ---------- */
+  var BEATS = [
+    { t:0.55, e:'cron_s0',       n:3, gap:0.30, dur:0.80 },
+    { t:1.95, e:'s0_jev',        n:12, gap:0.12, dur:0.90 },
+    { t:4.05, e:'jev_sheet',     n:6, gap:0.10, dur:0.70 },
+    { t:4.20, e:'jev_sim',       n:3, gap:0.16, dur:0.80 },
+    { t:5.55, e:'sheet_s1',      n:2, gap:0.32, dur:0.80 },
+    { t:6.85, e:'s1_s2',         n:2, gap:0.32, dur:0.80 },
+    { t:8.15, e:'s2_s3',         n:2, gap:0.32, dur:0.80 },
+    { t:9.45, e:'s3_s3b',        n:3, gap:0.22, dur:0.70 },
+    { t:10.70, e:'s3b_folders',  n:6, gap:0.10, dur:0.60 },
+    { t:11.95, e:'folders_t4',   n:2, gap:0.26, dur:0.80 },
+    { t:11.95, e:'folders_wp',   n:2, gap:0.26, dur:0.90 },
+    { t:11.95, e:'folders_nv',   n:2, gap:0.26, dur:1.05 },
+    { t:13.10, e:'t4_notion',    n:2, gap:0.26, dur:0.70 },
+    { t:13.10, e:'wp_wpsite',    n:2, gap:0.26, dur:0.75 },
+    { t:13.10, e:'nv_nvsite',    n:2, gap:0.26, dur:0.80 },
+    { t:14.20, e:'wp_archive',   n:2, gap:0.26, dur:0.95 },
+    { t:14.20, e:'nv_archive',   n:2, gap:0.26, dur:0.90 },
+    { t:14.35, e:'folders_archive', n:2, gap:0.30, dur:1.10 }
+  ];
+  var END = 15.7, HOLD = 4.6;
+
+  var SCENES = [
+    { t:0.00, code:'00', title:'수집',   sub:'15채널 · 90피드 → 62건/일' },
+    { t:1.95, code:'01', title:'Jev 필터', sub:'96 시드 판정 → 65 통과' },
+    { t:4.05, code:'02', title:'글감 적재', sub:'오늘 글감 시트 + jev-sim' },
+    { t:5.55, code:'03', title:'1-1 시드선별', sub:'→ 131 기획 · 07:20' },
+    { t:6.85, code:'04', title:'1-2 초안', sub:'12 템플릿 → 132' },
+    { t:8.15, code:'05', title:'1-3 완성본', sub:'1331 규칙 → 133' },
+    { t:9.45, code:'06', title:'1-3b 분류', sub:'133 → 15개 폴더' },
+    { t:11.95, code:'07', title:'3트랙 발행', sub:'노션 · WP · 네이버/티스토리' },
+    { t:14.20, code:'08', title:'1-3c 백업', sub:'(업로드됨) → 백업' },
+    { t:END,  code:'완료', title:'오늘 몫 끝', sub:'다음 실행 07:00' }
+  ];
+
+  /* ============================================================
+     1. 상태 · 모드
+     ============================================================ */
+  var W = 1440, H = 810;
+  var MODE = 'p', MW = 420;
+  var saved = null;
+  try { saved = window.localStorage ? window.localStorage.getItem('pipeSimMode') : null; } catch (e) {}
+  if (saved === 'm' || saved === 'p') MODE = saved;
+  else if ((window.innerWidth || 1024) <= 760 || /iPhone|iPod|Android/i.test(navigator.userAgent || '')) MODE = 'm';
+
+  var T = { t: 0, speed: 1, playing: true, frame: 0, last: 0, scene: -1 };
+  var scale = 1;
+
+  /* ============================================================
+     2. 레이아웃
+     ============================================================ */
+  function rowsOf(nd) { return nd.rows || []; }
+
+  function nodeH(nd) {
+    if (MODE === 'm') return 44;
+    return 61 + (nd.sub ? 14 : 0) + rowsOf(nd).length * 15 + (nd.live ? 22 : 0);
+  }
+
+  var COLS = {
+    1: { x: 26,  w: 254 },
+    2: { x: 312, w: 246 },
+    3: { x: 590, w: 218 },
+    4: { x: 838, w: 286 },
+    5: { x: 1156, w: 272 }
+  };
+  var COL_ORDER = {
+    1: ['cron','s0','jev'],          /* sheet/sim 은 따로 2단 배치 */
+    2: ['s1','s2','s3'],
+    3: ['s3b','folders'],
+    4: ['t4','wp','nv'],
+    5: ['notion','wpsite','nvsite']
+  };
+
+  function spread(list, top, bottom, maxGap) {
+    var n = list.length, i, total = 0;
+    if (!n) return;
+    for (i = 0; i < n; i++) total += list[i].h;
+    var gap = n > 1 ? (bottom - top - total) / (n - 1) : 0;
+    if (gap > maxGap) gap = maxGap;
+    if (gap < 10) gap = 10;
+    var y = top;
+    for (i = 0; i < n; i++) { list[i].y = Math.round(y); y += list[i].h + gap; }
+  }
+
+  function layoutPC() {
+    W = 1440; H = 810;
+    var i, nd;
+    for (i = 0; i < NODES.length; i++) {
+      nd = NODES[i];
+      nd.w = COLS[nd.col].w;
+      nd.h = nodeH(nd);
+    }
+    for (var c = 1; c <= 5; c++) {
+      var ids = COL_ORDER[c], list = [];
+      for (i = 0; i < ids.length; i++) {
+        nd = byId[ids[i]];
+        nd.x = COLS[c].x;
+        list.push(nd);
+      }
+      if (c === 1) spread(list, 46, 560, 74);
+      else if (c === 2) spread(list, 66, 620, 88);
+      else if (c === 3) spread(list, 250, 600, 96);
+      else if (c === 4) spread(list, 92, 600, 96);
+      else spread(list, 92, 560, 96);
+    }
+    /* 0단계 출력 2개: 시트 · jev-sim (나란히) */
+    var sheet = byId.sheet, sim = byId.sim;
+    var w2 = Math.floor((COLS[1].w - 12) / 2);
+    sheet.w = w2; sim.w = COLS[1].w - w2 - 12;
+    sheet.x = COLS[1].x; sim.x = COLS[1].x + w2 + 12;
+    var hy = byId.jev.y + byId.jev.h + 26;
+    sheet.y = hy; sim.y = hy;
+    sheet.h = sim.h = Math.max(sheet.h, sim.h);
+    var arch = byId.archive;
+    arch.x = 578; arch.w = 1412 - 578; arch.y = 664; arch.h = 88;
+  }
+
+  function layoutMobile() {
+    W = MW;
+    var m = 12, gap = 10;
+    var full = W - m * 2;
+    var colW = Math.floor((full - gap) / 2);
+    var levels = [
+      ['cron'], ['s0'], ['jev'], ['sheet','sim'], ['s1'], ['s2'], ['s3'],
+      ['s3b'], ['folders'], ['t4','notion'], ['wp','wpsite'], ['nv','nvsite'], ['archive']
+    ];
+    var y = 12, i, j, nd;
+    for (i = 0; i < levels.length; i++) {
+      var row = levels[i], rowH = 0;
+      for (j = 0; j < row.length; j++) {
+        nd = byId[row[j]];
+        nd.h = 44;
+        if (row.length === 1) { nd.w = full; nd.x = m; }
+        else { nd.w = colW; nd.x = m + j * (colW + gap); }
+        nd.y = y;
+        if (nd.h > rowH) rowH = nd.h;
+      }
+      y += rowH + gap;
+    }
+    H = Math.max(660, y + 58);
+  }
+
+  /* ============================================================
+     3. 앵커 · 엣지 경로
+     ============================================================ */
+  function anchor(nd, side, p) {
+    p = (p === undefined) ? 0.5 : p;
+    if (side === 't') return [nd.x + nd.w * p, nd.y];
+    if (side === 'b') return [nd.x + nd.w * p, nd.y + nd.h];
+    if (side === 'l') return [nd.x, nd.y + nd.h * p];
+    return [nd.x + nd.w, nd.y + nd.h * p];
+  }
+  function normal(side) {
+    if (side === 't') return [0, -1];
+    if (side === 'b') return [0, 1];
+    if (side === 'l') return [-1, 0];
+    return [1, 0];
+  }
+
+  /* PC 전용 앵커 비율 (겹침을 피하려고 조금씩 비켜 잡습니다) */
+  var PC_ANCHOR = {
+    cron_s0:      [['b',0.5],['t',0.5]],
+    s0_jev:       [['b',0.5],['t',0.5]],
+    jev_sheet:    [['b',0.3],['t',0.5]],
+    jev_sim:      [['b',0.7],['t',0.5]],
+    sheet_s1:     [['r',0.55],['l',0.5]],
+    s1_s2:        [['b',0.5],['t',0.5]],
+    s2_s3:        [['b',0.5],['t',0.5]],
+    s3_s3b:       [['r',0.30],['l',0.82]],
+    s3b_folders:  [['b',0.5],['t',0.5]],
+    folders_t4:   [['r',0.12],['l',0.5]],
+    folders_wp:   [['r',0.42],['l',0.5]],
+    folders_nv:   [['r',0.78],['l',0.5]],
+    t4_notion:    [['r',0.5],['l',0.5]],
+    wp_wpsite:    [['r',0.45],['l',0.5]],
+    nv_nvsite:    [['r',0.45],['l',0.5]],
+    wp_archive:   [['r',0.5],['r',0.92]],
+    nv_archive:   [['b',0.5],['t',0.78]],
+    folders_archive: [['b',0.5],['t',0.28]]
+  };
+  /* 모바일 앵커 */
+  var M_ANCHOR = {
+    cron_s0:      [['b',0.5],['t',0.5]],
+    s0_jev:       [['b',0.5],['t',0.5]],
+    jev_sheet:    [['b',0.3],['t',0.5]],
+    jev_sim:      [['b',0.7],['t',0.5]],
+    sheet_s1:     [['b',0.5],['t',0.5]],
+    s1_s2:        [['b',0.5],['t',0.5]],
+    s2_s3:        [['b',0.5],['t',0.5]],
+    s3_s3b:       [['b',0.5],['t',0.5]],
+    s3b_folders:  [['b',0.5],['t',0.5]],
+    folders_t4:   [['b',0.30],['t',0.5]],
+    folders_wp:   [['b',0.50],['t',0.5]],
+    folders_nv:   [['b',0.70],['t',0.5]],
+    t4_notion:    [['r',0.5],['l',0.5]],
+    wp_wpsite:    [['r',0.5],['l',0.5]],
+    nv_nvsite:    [['r',0.5],['l',0.5]],
+    wp_archive:   [['b',0.5],['t',0.72]],
+    nv_archive:   [['b',0.5],['t',0.86]],
+    folders_archive: [['b',0.5],['t',0.12]]
+  };
+
+  /* 직각 우회 경로에 작은 원형 굴곡을 주어 부드럽게 잇습니다 */
+  function viaPath(p1, via, p2, r) {
+    var pts = [p1].concat(via, [p2]);
+    var d = 'M' + pts[0][0].toFixed(1) + ',' + pts[0][1].toFixed(1);
+    for (var i = 1; i < pts.length - 1; i++) {
+      var a = pts[i - 1], b = pts[i], c = pts[i + 1];
+      var v1x = a[0] - b[0], v1y = a[1] - b[1];
+      var v2x = c[0] - b[0], v2y = c[1] - b[1];
+      var l1 = Math.sqrt(v1x * v1x + v1y * v1y) || 1;
+      var l2 = Math.sqrt(v2x * v2x + v2y * v2y) || 1;
+      var rr = Math.min(r, l1 / 2, l2 / 2);
+      var s1 = [b[0] + v1x / l1 * rr, b[1] + v1y / l1 * rr];
+      var s2 = [b[0] + v2x / l2 * rr, b[1] + v2y / l2 * rr];
+      d += ' L' + s1[0].toFixed(1) + ',' + s1[1].toFixed(1);
+      d += ' Q' + b[0].toFixed(1) + ',' + b[1].toFixed(1) + ' ' + s2[0].toFixed(1) + ',' + s2[1].toFixed(1);
+    }
+    var last = pts[pts.length - 1];
+    return d + ' L' + last[0].toFixed(1) + ',' + last[1].toFixed(1);
+  }
+
+  function buildEdges() {
+    var svg = document.getElementById('svg');
+    var gE = document.getElementById('gEdges');
+    gE.innerHTML = '';
+    var A = (MODE === 'm') ? M_ANCHOR : PC_ANCHOR;
+    var elbowN = 0;
+    for (var i = 0; i < EDGES.length; i++) {
+      var e = EDGES[i];
+      var a = byId[e.a], b = byId[e.b];
+      var an = A[e.id] || [[e.sa,0.5],[e.sb,0.5]];
+      var p1 = anchor(a, an[0][0], an[0][1]);
+      var p2 = anchor(b, an[1][0], an[1][1]);
+      var n1 = normal(an[0][0]), n2 = normal(an[1][0]);
+      var dx = p2[0] - p1[0], dy = p2[1] - p1[1];
+      var dist = Math.sqrt(dx*dx + dy*dy) || 1;
+      var k = Math.min(dist * 0.42, Math.max(Math.abs(dx), Math.abs(dy)) * 0.55 + 6);
+      k = Math.min(210, Math.max(5, k));
+      var ha = (an[0][0] === 'l' || an[0][0] === 'r');
+      var hb = (an[1][0] === 'l' || an[1][0] === 'r');
+      if (ha && hb) k = Math.min(k, Math.abs(dx) * 0.65 + 26);
+      var c1 = [p1[0] + n1[0] * k, p1[1] + n1[1] * k];
+      var c2 = [p2[0] + n2[0] * k, p2[1] + n2[1] * k];
+
+      /* 오른쪽에서 오른쪽으로 도는 선은 바깥으로 살짝 돌아갑니다(화면 밖으로 나가지 않게) */
+      if (an[0][0] === 'r' && an[1][0] === 'r') {
+        var cx = Math.min(W - 6, Math.max(p1[0], p2[0]) + 16);
+        c1 = [cx, p1[1] + (p2[1]-p1[1]) * 0.12];
+        c2 = [cx, p2[1] - (p2[1]-p1[1]) * 0.12];
+      }
+      var d;
+      var via = pcVia(e.id, p1, p2);
+      /* 좌우로 멀리 떨어진 두 노드(세로 차가 큰 경우)는 카드 사이 통로로 깊어 보냅니다 */
+      if (!via && (an[0][0] === 'l' || an[0][0] === 'r') && (an[1][0] === 'l' || an[1][0] === 'r') &&
+          Math.abs(dy) > Math.abs(dx) * 1.6) {
+        var sgn = (p2[0] >= p1[0]) ? 1 : -1;
+        var off = 10 + (elbowN++ % 3) * 7;
+        via = [[p1[0] + sgn * off, p1[1]], [p1[0] + sgn * off, p2[1]]];
+      }
+      if (via) {
+        d = viaPath(p1, via, p2, 7);
+      } else {
+        d = 'M' + p1[0].toFixed(1) + ',' + p1[1].toFixed(1) +
+            ' C' + c1[0].toFixed(1) + ',' + c1[1].toFixed(1) +
+            ' ' + c2[0].toFixed(1) + ',' + c2[1].toFixed(1) +
+            ' ' + p2[0].toFixed(1) + ',' + p2[1].toFixed(1);
+      }
+
+      var ns = 'http://www.w3.org/2000/svg';
+      var path = document.createElementNS(ns, 'path');
+      path.setAttribute('d', d);
+      path.setAttribute('class', 'edge');
+      path.setAttribute('stroke', e.c);
+      path.setAttribute('stroke-opacity', e.dash ? '0.16' : '0.24');
+      path.setAttribute('stroke-width', '1.5');
+      if (e.dash) path.setAttribute('stroke-dasharray', '3 7');
+      path.setAttribute('marker-end', 'url(#ah-' + e.c.replace('#','') + ')');
+      gE.appendChild(path);
+      e.el = path;
+      e.p1 = p1; e.p2 = p2; e.len = 0;
+    }
+    svg.setAttribute('width', W);
+    svg.setAttribute('height', H);
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  }
+
+  function buildDefs() {
+    var defs = document.getElementById('defs');
+    var colors = {}, i;
+    for (i = 0; i < EDGES.length; i++) colors[EDGES[i].c] = 1;
+    var html = '';
+    for (var c in colors) {
+      if (!Object.prototype.hasOwnProperty.call(colors, c)) continue;
+      html += '<marker id="ah-' + c.replace('#','') + '" viewBox="0 0 10 10" refX="8.6" refY="5" ' +
+        'markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse" markerUnits="strokeWidth">' +
+        '<path d="M0,0.6 L10,5 L0,9.4 z" fill="' + c + '" opacity="0.9"/></marker>';
+    }
+    defs.innerHTML = html;
+  }
+
+  /* ============================================================
+     4. 노드 렌더
+     ============================================================ */
+  var nodesBox = document.getElementById('nodes');
+
+  function nodeHTML(nd) {
+    var style = '--c:' + nd.c + ';--cr:' + rb(nd.c) + ';left:' + nd.x + 'px;top:' + nd.y + 'px;width:' + nd.w + 'px;height:' + nd.h + 'px';
+    var h = '<div class="node' + (MODE === 'm' ? ' mob' : '') + '" id="n_' + nd.id + '" style="' + style + '">';
+    h += '<div class="nh"><span class="nidx">' + nd.idx + '</span><span class="nt">' + nd.name + '</span>' +
+         '<span class="np">' + nd.per + '</span></div>';
+    if (MODE === 'm') {
+      h += '<div class="nb"><div class="mline">' + nd.mline + '</div></div>';
+    } else {
+      h += '<div class="nb">';
+      if (nd.sub) h += '<div class="nsub">' + nd.sub + '</div>';
+      for (var i = 0; i < nd.rows.length; i++) {
+        h += '<div class="r"><span class="rl">' + nd.rows[i][0] + '</span><span class="rv">' + nd.rows[i][1] + '</span></div>';
+      }
+      if (nd.live) h += '<div class="lrow"><span>처리</span><b id="lc_' + nd.id + '">0</b><span class="lt">/ ' + nd.live.total + '</span></div><div class="lbar"><i id="lb_' + nd.id + '"></i></div>';
+      h += '</div>';
+      if (nd.foot) h += '<div class="nfoot">' + nd.foot + '</div>';
+    }
+    return h + '</div>';
+  }
+
+  function renderNodes() {
+    var out = [];
+    for (var i = 0; i < NODES.length; i++) out.push(nodeHTML(NODES[i]));
+    nodesBox.innerHTML = out.join('');
+  }
+
+  /* ============================================================
+     5. 런타임 상태 (도착 계산)
+     ============================================================ */
+  function packetTimes() {
+    /* 각 비트의 패킷 시작·도착 시각을 미리 계산 */
+    for (var i = 0; i < BEATS.length; i++) {
+      var b = BEATS[i], e = edgeById[b.e], arr = [];
+      for (var k = 0; k < b.n; k++) {
+        var s = b.t + k * b.gap;
+        arr.push([s, s + b.dur]);
+      }
+      b.packets = arr;
+      b.e0 = b.t;
+      b.e1 = b.t + (b.n - 1) * b.gap + b.dur;
+      if (e) {
+        e.stage = i;
+        NTOT[e.b] = (NTOT[e.b] || 0) + b.n;
+      }
+    }
+  }
+  var NTOT = {};
+  packetTimes();
+
+  function nodeState(t) {
+    /* 각 노드: 최초 도착 시각, 누적 도착 수 */
+    var st = {}, i, j;
+    for (i = 0; i < NODES.length; i++) st[NODES[i].id] = { first: 999, recv: 0, last: -9 };
+    st.cron.first = 0.15;
+    for (i = 0; i < BEATS.length; i++) {
+      var b = BEATS[i], e = edgeById[b.e];
+      if (!e) continue;
+      var tgt = st[e.b];
+      for (j = 0; j < b.packets.length; j++) {
+        if (b.packets[j][1] <= t) {
+          tgt.recv++;
+          if (tgt.first > 900) tgt.first = b.packets[j][1];
+          if (b.packets[j][1] > tgt.last) tgt.last = b.packets[j][1];
+        }
+      }
+    }
+    return st;
+  }
+
+  var STAT = null;
+
+  function applyState() {
+    var t = T.t;
+    STAT = nodeState(t);
+    var i, nd, el, s;
+    for (i = 0; i < NODES.length; i++) {
+      nd = NODES[i];
+      s = STAT[nd.id];
+      el = document.getElementById('n_' + nd.id);
+      if (!el) continue;
+      var on = (t >= s.first);
+      if (on) el.classList.add('on'); else el.classList.remove('on');
+      var hit = (t - s.last >= 0) && (t - s.last < 0.42) && s.last > 0;
+      if (hit) el.classList.add('hit'); else el.classList.remove('hit');
+      if (nd.live) {
+        var pct = Math.min(1, s.recv / Math.max(1, NTOT[nd.id] || 1));
+        var bar = document.getElementById('lb_' + nd.id);
+        if (bar) bar.style.width = (pct * 100).toFixed(0) + '%';
+        var lc = document.getElementById('lc_' + nd.id);
+        if (lc) lc.textContent = String(Math.round(nd.live.total * pct));
+      }
+    }
+    /* 엣지 상태 */
+    for (i = 0; i < BEATS.length; i++) {
+      var b = BEATS[i], e = edgeById[b.e];
+      if (!e || !e.el) continue;
+      var hot = (t >= b.e0 - 0.05 && t <= b.e1 + 0.15);
+      var done = (t > b.e1 + 0.15);
+      if (hot) { e.el.classList.add('hot'); e.el.classList.remove('done'); }
+      else { e.el.classList.remove('hot'); if (done) e.el.classList.add('done'); else e.el.classList.remove('done'); }
+    }
+  }
+
+  /* ============================================================
+     6. 패킷
+     ============================================================ */
+  var MAXP = 40, pool = [], poolHalo = [];
+  function buildPool() {
+    var g = document.getElementById('gPackets');
+    g.innerHTML = '';
+    var ns = 'http://www.w3.org/2000/svg';
+    for (var i = 0; i < MAXP; i++) {
+      var halo = document.createElementNS(ns, 'circle');
+      halo.setAttribute('r', '5.5'); halo.setAttribute('fill', '#fff'); halo.setAttribute('opacity', '0');
+      g.appendChild(halo);
+      var c = document.createElementNS(ns, 'circle');
+      c.setAttribute('r', '2.1'); c.setAttribute('fill', '#fff'); c.setAttribute('opacity', '0');
+      g.appendChild(c);
+      pool.push(c); poolHalo.push(halo);
+    }
+  }
+
+  var pts = [];
+  function drawPackets() {
+    if (!pool.length) return;
+    var t = T.t, used = 0, i, k, j;
+    for (i = 0; i < BEATS.length; i++) {
+      var b = BEATS[i], e = edgeById[b.e];
+      if (!e || !e.el) continue;
+      for (k = 0; k < b.packets.length; k++) {
+        var s = b.packets[k][0], f = b.packets[k][1];
+        if (t < s || t > f) continue;
+        if (used >= MAXP) break;
+        var prog = (t - s) / (f - s);
+        pts.length = 0;
+        var L = e.el.getTotalLength ? e.el.getTotalLength() : 0;
+        if (!L) continue;
+        var p = e.el.getPointAtLength(L * prog);
+        var c = pool[used], halo = poolHalo[used];
+        c.setAttribute('cx', p.x); c.setAttribute('cy', p.y);
+        c.setAttribute('fill', e.c); c.setAttribute('opacity', '1');
+        halo.setAttribute('cx', p.x); halo.setAttribute('cy', p.y);
+        halo.setAttribute('fill', e.c); halo.setAttribute('opacity', '0.22');
+        used++;
+        /* 꼬리 2점 */
+        for (j = 1; j <= 2; j++) {
+          var pp = e.el.getPointAtLength(Math.max(0, L * (prog - j * 0.045)));
+          if (used >= MAXP) break;
+          var tc = pool[used], th = poolHalo[used];
+          tc.setAttribute('cx', pp.x); tc.setAttribute('cy', pp.y);
+          tc.setAttribute('fill', e.c); tc.setAttribute('opacity', (0.5 / j).toFixed(2));
+          th.setAttribute('cx', pp.x); th.setAttribute('cy', pp.y);
+          th.setAttribute('opacity', '0');
+          used++;
+        }
+      }
+    }
+    for (i = used; i < MAXP; i++) {
+      pool[i].setAttribute('opacity', '0');
+      poolHalo[i].setAttribute('opacity', '0');
+    }
+  }
+
+  /* ============================================================
+     7. 스테이지 · UI
+     ============================================================ */
+  var badge = document.getElementById('badge');
+  var badgeT = document.getElementById('badgeT');
+  var badgeS = document.getElementById('badgeS');
+  var badgeL = document.getElementById('badgeL');
+
+  function sceneIndex(t) {
+    var i, s = 0;
+    for (i = 0; i < SCENES.length; i++) if (t >= SCENES[i].t) s = i;
+    return s;
+  }
+  function setScene(i) {
+    if (T.scene === i) return;
+    T.scene = i;
+    var s = SCENES[i];
+    badgeT.textContent = s.code + ' · ' + s.title;
+    badgeS.textContent = s.sub;
+    if (i >= SCENES.length - 1) { badge.classList.add('done'); badgeL.textContent = 'DONE'; }
+    else { badge.classList.remove('done'); badgeL.textContent = T.playing ? 'LIVE' : 'PAUSE'; }
+    var chips = document.querySelectorAll('.rb');
+    for (var k = 0; k < chips.length; k++) {
+      var ci = Number(chips[k].getAttribute('data-s'));
+      var cur = Math.min(i, chips.length - 1);
+      chips[k].className = 'rb' + (ci === cur ? ' on' : (ci < cur ? ' past' : ''));
+    }
+  }
+
+  function statHTML() {
+    var done = 0;
+    if (STAT) for (var id in STAT) if (Object.prototype.hasOwnProperty.call(STAT, id) && STAT[id].recv > 0) done++;
+    var pk = 0;
+    for (var i = 0; i < BEATS.length; i++) {
+      for (var k = 0; k < BEATS[i].packets.length; k++) if (BEATS[i].packets[k][1] <= T.t) pk++;
+    }
+    var s = [
+      ['NODES', String(NODES.length), ''],
+      ['EDGES', String(EDGES.length), ''],
+      ['STAGE', String(Math.max(0, T.scene)) + '/' + String(SCENES.length - 1), 'hi'],
+      ['PACKETS', String(pk), 'hi'],
+      ['LIVE', String(done), '']
+    ];
+    var o = [];
+    for (var j = 0; j < s.length; j++) {
+      o.push('<span class="st' + (s[j][0] === 'LIVE' ? ' opt' : '') + '">' + s[j][0] + ' <b class="' + s[j][2] + '">' + s[j][1] + '</b></span>');
+    }
+    document.getElementById('stats').innerHTML = o.join('');
+  }
+
+  function buildRibbon() {
+    var box = document.getElementById('ribbon'), o = [];
+    var names = ['0 수집', 'Jev 필터', '글감 적재', '1-1', '1-2', '1-3', '1-3b', '발행 ×3', '1-3c'];
+    for (var i = 0; i < names.length; i++) {
+      o.push('<button class="rb" data-s="' + i + '">' + names[i] + '</button>');
+    }
+    box.innerHTML = o.join('');
+    box.addEventListener('click', function (ev) {
+      var b = ev.target.closest ? ev.target.closest('.rb') : null;
+      if (!b) return;
+      var i = Number(b.getAttribute('data-s'));
+      seek(SCENES[i].t + 0.02);
+    });
+  }
+
+  function seek(t) {
+    T.t = t;
+    T.scene = -1;
+    applyState();
+    setScene(sceneIndex(t));
+    statHTML();
+    if (!T.playing) { /* 일시정지 상태면 그 화면에서 멈춤 */ }
+  }
+
+  /* ============================================================
+     8. 툴팁 · 드로어
+     ============================================================ */
+  var drawer = document.getElementById('drawer');
+  var veil = document.getElementById('veil');
+
+  function openNode(nd) {
+    document.getElementById('dh').style.setProperty('--c', nd.c);
+    document.getElementById('dh').style.setProperty('--cr', rb(nd.c));
+    document.getElementById('dK').textContent = 'STEP ' + nd.idx + ' · ' + nd.per;
+    document.getElementById('dTitle').textContent = nd.name;
+    document.getElementById('dSub').textContent = nd.sub || '';
+    var d = nd.d || {}, o = [];
+    o.push('<div class="dsec">역할</div><div class="dp">' + d.role + '</div>');
+    if (d.io && d.io.length) {
+      o.push('<div class="dsec">입력 · 출력</div>');
+      for (var i = 0; i < d.io.length; i++) {
+        o.push('<div class="dl"><span class="lk">' + d.io[i][0] + '</span><span class="lv">' + d.io[i][1] + '</span></div>');
+      }
+    }
+    if (d.fact && d.fact.length) {
+      o.push('<div class="dsec">실제 값</div>');
+      for (var j = 0; j < d.fact.length; j++) {
+        o.push('<div class="dl"><span class="lk">' + d.fact[j][0] + '</span><span class="lv">' + d.fact[j][1] + '</span></div>');
+      }
+    }
+    if (d.note) o.push('<div class="dsec">설계 노트</div><div class="dp">' + d.note + '</div>');
+    o.push('<div style="margin-top:14px"><span class="dchip" style="--c:' + nd.c + '">' + nd.sub + '</span></div>');
+    document.getElementById('dList').innerHTML = o.join('');
+    drawer.classList.add('in'); veil.classList.add('in');
+  }
+  function closeDrawer() { drawer.classList.remove('in'); veil.classList.remove('in'); }
+  veil.addEventListener('click', closeDrawer);
+  document.getElementById('dX').addEventListener('click', closeDrawer);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeDrawer();
+    if (e.code === 'Space' && (e.target === document.body || e.target === document.documentElement)) {
+      e.preventDefault(); togglePlay();
+    }
+  });
+
+  nodesBox.addEventListener('click', function (e) {
+    var box = e.target.closest ? e.target.closest('.node') : null;
+    if (!box) return;
+    var nd = byId[box.id.replace(/^n_/, '')];
+    if (nd) openNode(nd);
+  });
+
+  /* ============================================================
+     9. 루프 · 컨트롤
+     ============================================================ */
+  function loop(now) {
+    var dt = T.last ? Math.min(0.06, (now - T.last) / 1000) : 0;
+    T.last = now;
+    if (T.playing) {
+      T.t += dt * T.speed;
+      if (T.t > END + HOLD) { T.t = 0.001; T.scene = -1; }
+      applyState();
+      setScene(sceneIndex(T.t));
+      if (T.frame % 4 === 0) statHTML();
+    }
+    drawPackets();
+    T.frame++;
+    requestAnimationFrame(loop);
+  }
+
+  function togglePlay() {
+    T.playing = !T.playing;
+    document.getElementById('playBtn').textContent = T.playing ? '❚❚' : '▶';
+    badgeL.textContent = T.playing ? (T.scene >= SCENES.length - 1 ? 'DONE' : 'LIVE') : 'PAUSE';
+  }
+  function cycleSpeed() {
+    T.speed = (T.speed === 1) ? 2 : 1;
+    document.getElementById('spdBtn').textContent = T.speed + 'x';
+    document.getElementById('spdBtn').classList.toggle('on', T.speed === 2);
+  }
+  function restart() {
+    T.t = 0.001; T.scene = -1;
+    applyState(); setScene(sceneIndex(T.t)); statHTML();
+    if (!T.playing) { T.playing = true; document.getElementById('playBtn').textContent = '❚❚'; }
+  }
+  document.getElementById('playBtn').addEventListener('click', togglePlay);
+  document.getElementById('spdBtn').addEventListener('click', cycleSpeed);
+  document.getElementById('rstBtn').addEventListener('click', restart);
+  document.getElementById('modeBtn').addEventListener('click', function () { setMode(MODE === 'm' ? 'p' : 'm'); });
+
+  /* ============================================================
+     10. 모드 · fit
+     ============================================================ */
+  function revealNodes() {
+    var all = nodesBox.getElementsByClassName('node');
+    for (var i = 0; i < all.length; i++) {
+      all[i].style.transitionDelay = (i * 0.028).toFixed(2) + 's';
+      all[i].classList.add('in');
+    }
+    setTimeout(function () {
+      for (var i2 = 0; i2 < all.length; i2++) all[i2].style.transitionDelay = '0s';
+    }, 900);
+  }
+
+  function applyMode() {
+    if (MODE === 'm') layoutMobile(); else layoutPC();
+    renderNodes();
+    revealNodes();
+    buildEdges();
+    fit();
+    T.scene = -1;
+    applyState();
+    setScene(sceneIndex(T.t));
+    statHTML();
+    try { if (window.localStorage) window.localStorage.setItem('pipeSimMode', MODE); } catch (e) {}
+    var mb = document.getElementById('modeBtn');
+    mb.textContent = MODE === 'm' ? '📱' : '🖥';
+    mb.title = MODE === 'm' ? '모바일 세로(9:16) — 누르면 PC 보기' : 'PC(16:9) — 누르면 모바일 세로 보기';
+    mb.classList.toggle('on', MODE === 'm');
+  }
+  function setMode(m) { MODE = m; applyMode(); }
+
+  function fit() {
+    var wrap = document.getElementById('stageWrap');
+    var out = document.getElementById('stageOut');
+    var world = document.getElementById('world');
+    world.style.width = W + 'px';
+    world.style.height = H + 'px';
+    var avail = wrap.clientWidth || W;
+    var chromeH = 0;
+    var rbEl = document.getElementById('ribbon');
+    var ftEl = document.querySelector('.foot');
+    if (rbEl) chromeH += rbEl.getBoundingClientRect().height || 0;
+    if (ftEl) chromeH += ftEl.getBoundingClientRect().height || 0;
+    var availH = Math.max(240, (window.innerHeight || 900) - wrap.getBoundingClientRect().top - chromeH - 20);
+    var s = Math.min(avail / W, availH / H);
+    if (MODE === 'p') s = Math.min(s, 1.28); else s = Math.min(s, 1.6);
+    if (s <= 0) s = 0.4;
+    scale = s;
+    world.style.transform = 'scale(' + s + ')';
+    out.style.width = Math.round(W * s) + 'px';
+    out.style.height = Math.round(H * s) + 'px';
+    var side = Math.max(0, (avail - W * s) / 2);
+    out.style.marginLeft = Math.round(side) + 'px';
+    out.style.marginRight = Math.round(side) + 'px';
+    wrap.style.height = Math.round(H * s) + 'px';
+  }
+
+  window.addEventListener('resize', function () { fit(); });
+  window.addEventListener('orientationchange', function () { setTimeout(fit, 200); });
+
+  /* ============================================================
+     11. 부트
+     ============================================================ */
+  buildDefs();
+  buildPool();
+  buildRibbon();
+  applyMode();
+  var REDUCE = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (REDUCE) {
+    T.playing = false;
+    document.getElementById('playBtn').textContent = '▶';
+    T.t = END - 0.4;
+    badge.classList.add('in');
+    applyState(); setScene(sceneIndex(T.t)); statHTML();
+  } else {
+    T.t = 0.001;
+    badge.classList.add('in');
+  }
+  requestAnimationFrame(loop);
+
+  window.__PIPE = {
+    nodes: NODES, edges: EDGES, beats: BEATS, T: T, fit: fit, seek: seek, setMode: setMode,
+    dims: function () { return { W: W, H: H, MODE: MODE, scale: scale }; },
+    state: function () { return STAT; }
+  };
+})();
+</script>
+</body>
+</html>
